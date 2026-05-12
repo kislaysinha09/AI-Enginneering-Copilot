@@ -1,5 +1,5 @@
 const { getEmbedding } =  require("../utils/embedText.js");
-const { searchSimilarChunks } = require("../utils/search.js");
+const vectorStoreService = require("../services/vectorStore/VectorStoreService.js");
 const { askLLM } = require("../services/llmService.js");
 const { buildPrompt } = require("../utils/buildPrompt.js");
 
@@ -14,8 +14,8 @@ const queryDocument = async (req, res) => {
     //convert query to embedding
     const queryEmbedding = await getEmbedding(query);
 
-    //find similar chunks
-    const results = searchSimilarChunks(queryEmbedding, 3);
+    //find similar chunks using the service
+    const results = await vectorStoreService.search(queryEmbedding, 3);
 
     //build prompt
     const prompt = buildPrompt(query, results);

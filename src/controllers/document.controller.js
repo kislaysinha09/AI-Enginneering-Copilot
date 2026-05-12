@@ -1,6 +1,6 @@
 const { chunkText } = require("../utils/chunkTest.js");
 const { getEmbedding } = require("../utils/embedText.js");   
-const { vectorStore } = require("../db/vectorStore.js");
+const vectorStoreService = require("../services/vectorStore/VectorStoreService.js");
 
 const uploadDocument = async (req, res) => {
   try {
@@ -11,17 +11,16 @@ const uploadDocument = async (req, res) => {
     // convert buffer → string
     const text = req.file.buffer.toString("utf-8");
     const chunks = chunkText(text);
-   // const embeddings = [];
 
     for (let chunk of chunks) {
       const embedding = await getEmbedding(chunk);
       console.log("embedding length:", embedding.length);
-      vectorStore.push({
-        text:chunk,
-        embedding: embedding,
+      
+      await vectorStoreService.addDocument(chunk, embedding, {
+        fileName: req.file.originalname,
+        uploadedAt: new Date().toISOString()
       });
     }
-    console.log("Vector Store Size:", vectorStore.length);
 
     return res.json({
       message: "Document stored in vector DB",
