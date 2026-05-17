@@ -1,3 +1,8 @@
+// Polyfill for pdf-parse compatibility with Node 20+
+if (typeof global.DOMMatrix === 'undefined') {
+  global.DOMMatrix = class {};
+}
+
 require('dotenv').config();
 const express = require('express');
 const app = express();
@@ -10,7 +15,7 @@ app.use(express.json());
 app.use("/api", openAiRoutes, queryRoutes);
 app.use("/api/documents", documentRoutes);
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`)
 })
