@@ -37,6 +37,27 @@ class MemoryProvider extends BaseProvider {
     this.store = [];
     return true;
   }
+
+  async deleteDocument(fileName) {
+    this.store = this.store.filter(item => item.metadata?.fileName !== fileName);
+    return true;
+  }
+
+  async listDocuments() {
+    const uniqueFiles = {};
+    for (const item of this.store) {
+      const fileName = item.metadata?.fileName || 'Unknown File';
+      if (!uniqueFiles[fileName]) {
+        uniqueFiles[fileName] = {
+          fileName,
+          mimeType: item.metadata?.mimeType || 'text/plain',
+          totalChunks: 0,
+        };
+      }
+      uniqueFiles[fileName].totalChunks += 1;
+    }
+    return Object.values(uniqueFiles);
+  }
 }
 
 module.exports = MemoryProvider;

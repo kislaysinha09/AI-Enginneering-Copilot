@@ -29,6 +29,22 @@ class BaseProvider {
   async clear() {
     throw new Error("Method 'clear' must be implemented");
   }
+
+  /**
+   * Delete all chunks belonging to a specific document.
+   * @param {string} fileName - The name of the file to delete.
+   */
+  async deleteDocument(fileName) {
+    throw new Error("Method 'deleteDocument' must be implemented");
+  }
+
+  /**
+   * List all unique documents stored in the vector store.
+   * @returns {Promise<Array<Object>>} - List of files with metadata.
+   */
+  async listDocuments() {
+    throw new Error("Method 'listDocuments' must be implemented");
+  }
 }
 
 module.exports = BaseProvider;

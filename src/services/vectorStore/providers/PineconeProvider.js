@@ -68,6 +68,49 @@ class PineconeProvider extends BaseProvider {
       throw error;
     }
   }
+
+  async deleteDocument(fileName) {
+    try {
+      await this.index.deleteMany({
+        filter: {
+          fileName: { "$eq": fileName }
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error("Pinecone Delete Error:", error);
+      throw error;
+    }
+  }
+
+  async listDocuments() {
+    try {
+      const dummyVector = new Array(1536).fill(0);
+      const queryResponse = await this.index.query({
+        vector: dummyVector,
+        topK: 1000,
+        includeMetadata: true,
+      });
+
+      const uniqueFiles = {};
+      for (const match of queryResponse.matches || []) {
+        const metadata = match.metadata || {};
+        const fileName = metadata.fileName || 'Unknown File';
+        if (!uniqueFiles[fileName]) {
+          uniqueFiles[fileName] = {
+            fileName,
+            mimeType: metadata.mimeType || 'text/plain',
+            totalChunks: 0,
+          };
+        }
+        uniqueFiles[fileName].totalChunks += 1;
+      }
+      return Object.values(uniqueFiles);
+    } catch (error) {
+      console.error("Pinecone List Documents Error:", error);
+      throw error;
+    }
+  }
 }
 
 module.exports = PineconeProvider;

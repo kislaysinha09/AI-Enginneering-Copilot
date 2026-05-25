@@ -2,8 +2,33 @@
 if (typeof global.DOMMatrix === 'undefined') {
   global.DOMMatrix = class {};
 }
+// Polyfill ImageData for environments lacking it
+if (typeof global.ImageData === 'undefined') {
+  global.ImageData = class {
+    constructor(width, height) {
+      this.width = width;
+      this.height = height;
+      this.data = new Uint8ClampedArray(width * height * 4);
+    }
+  };
+}
+// Polyfill Path2D for environments lacking it
+if (typeof global.Path2D === 'undefined') {
+  global.Path2D = class {
+    constructor(path) {
+      this.path = path || '';
+    }
+  };
+}
 
-require('dotenv').config();
+// Polyfill process.getBuiltinModule for libraries expecting it
+if (typeof process.getBuiltinModule !== 'function') {
+  process.getBuiltinModule = () => {
+    // Return undefined or a mock; most callers only check existence
+    return undefined;
+  };
+}
+
 const express = require('express');
 const app = express();
 

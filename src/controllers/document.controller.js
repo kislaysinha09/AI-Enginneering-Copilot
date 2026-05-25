@@ -40,4 +40,37 @@ const uploadDocument = async (req, res) => {
   }
 };
 
-module.exports = { uploadDocument };
+const getDocuments = async (req, res) => {
+  try {
+    const documents = await vectorStoreService.listDocuments();
+    return res.json(documents);
+  } catch (error) {
+    console.error("Get Documents Error:", error);
+    return res.status(500).json({
+      error: "Failed to retrieve documents",
+      details: error.message,
+    });
+  }
+};
+
+const deleteDocument = async (req, res) => {
+  try {
+    const { fileName } = req.params;
+    if (!fileName) {
+      return res.status(400).json({ error: "fileName parameter is required" });
+    }
+    await vectorStoreService.deleteDocument(fileName);
+    return res.json({
+      message: "Document and its vector chunks deleted successfully",
+      fileName,
+    });
+  } catch (error) {
+    console.error("Delete Document Error:", error);
+    return res.status(500).json({
+      error: "Failed to delete document",
+      details: error.message,
+    });
+  }
+};
+
+module.exports = { uploadDocument, getDocuments, deleteDocument };

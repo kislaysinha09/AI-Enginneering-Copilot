@@ -56,6 +56,30 @@ class LocalFileProvider extends BaseProvider {
     await this._save();
     return true;
   }
+
+  async deleteDocument(fileName) {
+    await this._load();
+    this.store = this.store.filter(item => item.metadata?.fileName !== fileName);
+    await this._save();
+    return true;
+  }
+
+  async listDocuments() {
+    await this._load();
+    const uniqueFiles = {};
+    for (const item of this.store) {
+      const fileName = item.metadata?.fileName || 'Unknown File';
+      if (!uniqueFiles[fileName]) {
+        uniqueFiles[fileName] = {
+          fileName,
+          mimeType: item.metadata?.mimeType || 'text/plain',
+          totalChunks: 0,
+        };
+      }
+      uniqueFiles[fileName].totalChunks += 1;
+    }
+    return Object.values(uniqueFiles);
+  }
 }
 
 module.exports = LocalFileProvider;
