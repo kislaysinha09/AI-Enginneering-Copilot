@@ -9,27 +9,21 @@ const uploadDocument = async (req, res) => {
       return res.status(400).json({ error: "File is required" });
     }
 
-    console.log(`Processing file: ${req.file.originalname} (${req.file.mimetype})`);
-
-    // 1. Extract text based on file type
+    // Extract text based on file type (PDF, DOCX, Text)
     const text = await documentProcessor.extractText(req.file.buffer, req.file.mimetype);
     
-    // 2. Chunk text semantically
+    // Split the text into semantic chunks using RecursiveCharacterTextSplitter
     const chunks = defaultSplitter.splitText(text);
-    console.log(`Split into ${chunks.length} chunks`);
 
-    // 3. Embed and Store
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
+    // Metadata to attach to each chunk
+    const metadata = {
+      fileName: req.file.originalname,
+      mimeType: req.file.mimetype,
+    };
+
+    for (let chunk of chunks) {
       const embedding = await getEmbedding(chunk);
-      
-      await vectorStoreService.addDocument(chunk, embedding, {
-        fileName: req.file.originalname,
-        fileType: req.file.mimetype,
-        chunkIndex: i,
-        totalChunks: chunks.length,
-        uploadedAt: new Date().toISOString()
-      });
+      await vectorStoreService.addDocument(chunk, embedding, metadata);
     }
 
     return res.json({
@@ -46,4 +40,37 @@ const uploadDocument = async (req, res) => {
   }
 };
 
-module.exports = { uploadDocument };
+const getDocuments = async (req, res) => {
+  try {
+    const documents = await vectorStoreService.listDocuments();
+    return res.json(documents);
+  } catch (error) {
+    console.error("Get Documents Error:", error);
+    return res.status(500).json({
+      error: "Failed to retrieve documents",
+      details: error.message,
+    });
+  }
+};
+
+const deleteDocument = async (req, res) => {
+  try {
+    const { fileName } = req.params;
+    if (!fileName) {
+      return res.status(400).json({ error: "fileName parameter is required" });
+    }
+    await vectorStoreService.deleteDocument(fileName);
+    return res.json({
+      message: "Document and its vector chunks deleted successfully",
+      fileName,
+    });
+  } catch (error) {
+    console.error("Delete Document Error:", error);
+    return res.status(500).json({
+      error: "Failed to delete document",
+      details: error.message,
+    });
+  }
+};
+
+module.exports = { uploadDocument, getDocuments, deleteDocument };

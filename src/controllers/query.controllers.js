@@ -14,7 +14,7 @@ const queryDocument = async (req, res) => {
     //convert query to embedding
     const queryEmbedding = await getEmbedding(query);
 
-    //find similar chunks using the service
+    //find similar chunks using persistent VectorStoreService
     const results = await vectorStoreService.search(queryEmbedding, 3);
 
     //build prompt

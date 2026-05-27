@@ -33,6 +33,14 @@ class VectorStoreService {
     return await this.provider.search(queryEmbedding, topK);
   }
 
+  async deleteDocument(fileName) {
+    return await this.provider.deleteDocument(fileName);
+  }
+
+  async listDocuments() {
+    return await this.provider.listDocuments();
+  }
+
   setProvider(provider) {
     this.provider = provider;
   }

@@ -2,6 +2,28 @@
 if (typeof global.DOMMatrix === 'undefined') {
   global.DOMMatrix = class {};
 }
+// Polyfill ImageData for environments lacking it
+if (typeof global.ImageData === 'undefined') {
+  global.ImageData = class {
+    constructor(width, height) {
+      this.width = width;
+      this.height = height;
+      this.data = new Uint8ClampedArray(width * height * 4);
+    }
+  };
+}
+// Polyfill Path2D for environments lacking it
+if (typeof global.Path2D === 'undefined') {
+  global.Path2D = class {
+    constructor(path) {
+      this.path = path || '';
+    }
+  };
+}
+// Polyfill process.getBuiltinModule to silence warnings
+if (typeof process.getBuiltinModule !== 'function') {
+  process.getBuiltinModule = () => undefined;
+}
 
 let pdf;
 try {
