@@ -1,4 +1,7 @@
-// Polyfill for pdf-parse compatibility with Node 20+
+require('dotenv').config();
+const supabase = require('./src/supabaseClient');
+// SUPABASE_JWT_SECRET is no longer used; Supabase client is initialized in supabaseClient.js
+
 if (typeof global.DOMMatrix === 'undefined') {
   global.DOMMatrix = class {};
 }
@@ -51,6 +54,8 @@ app.use((req, res, next) => {
 
 app.use("/api", openAiRoutes, queryRoutes);
 app.use("/api/documents", documentRoutes);
+const protectedRoutes = require("./src/routes/protectedRoutes.js");
+app.use("/api/protected", protectedRoutes);
 
 // Lightweight health check route for frontend indicators
 app.get("/health", (req, res) => {
