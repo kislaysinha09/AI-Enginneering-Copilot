@@ -27,6 +27,7 @@ const requireAuth = async (req, res, next) => {
     }
     console.debug('Token validated for user id:', user.id);
     req.user = user; // attach user to request
+    req.tenantId = user.id; // raw Supabase UUID for tenant isolation
     next();
   } catch (err) {
     console.error('Authentication middleware error:', err);

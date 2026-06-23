@@ -23,7 +23,7 @@ const uploadDocument = async (req, res) => {
 
     for (let chunk of chunks) {
       const embedding = await getEmbedding(chunk);
-      await vectorStoreService.addDocument(chunk, embedding, metadata);
+      await vectorStoreService.addDocument(chunk, embedding, metadata, req.tenantId);
     }
 
     return res.json({
@@ -42,7 +42,7 @@ const uploadDocument = async (req, res) => {
 
 const getDocuments = async (req, res) => {
   try {
-    const documents = await vectorStoreService.listDocuments();
+    const documents = await vectorStoreService.listDocuments(req.tenantId);
     return res.json(documents);
   } catch (error) {
     console.error("Get Documents Error:", error);
@@ -59,7 +59,7 @@ const deleteDocument = async (req, res) => {
     if (!fileName) {
       return res.status(400).json({ error: "fileName parameter is required" });
     }
-    await vectorStoreService.deleteDocument(fileName);
+    await vectorStoreService.deleteDocument(fileName, req.tenantId);
     return res.json({
       message: "Document and its vector chunks deleted successfully",
       fileName,

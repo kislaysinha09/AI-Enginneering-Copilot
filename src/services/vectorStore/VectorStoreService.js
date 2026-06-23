@@ -25,20 +25,25 @@ class VectorStoreService {
     return new LocalFileProvider();
   }
 
-  async addDocument(text, embedding, metadata = {}) {
-    return await this.provider.add(text, embedding, metadata);
+  async addDocument(text, embedding, metadata = {}, tenantId = null) {
+    const meta = { ...metadata };
+    if (tenantId) meta.userId = tenantId;
+    return await this.provider.add(text, embedding, meta);
   }
 
-  async search(queryEmbedding, topK = 3) {
-    return await this.provider.search(queryEmbedding, topK);
+  async search(queryEmbedding, topK = 3, tenantId = null) {
+    const filter = tenantId ? { userId: tenantId } : undefined;
+    return await this.provider.search(queryEmbedding, topK, filter);
   }
 
-  async deleteDocument(fileName) {
-    return await this.provider.deleteDocument(fileName);
+  async deleteDocument(fileName, tenantId = null) {
+    const filter = tenantId ? { userId: tenantId } : undefined;
+    return await this.provider.deleteDocument(fileName, filter);
   }
 
-  async listDocuments() {
-    return await this.provider.listDocuments();
+  async listDocuments(tenantId = null) {
+    const filter = tenantId ? { userId: tenantId } : undefined;
+    return await this.provider.listDocuments(filter);
   }
 
   setProvider(provider) {

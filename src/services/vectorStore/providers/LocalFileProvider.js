@@ -30,16 +30,23 @@ class LocalFileProvider extends BaseProvider {
     await fs.writeFile(this.filePath, JSON.stringify(this.store, null, 2));
   }
 
-  async add(text, embedding, metadata = {}) {
+  async add(text, embedding, metadata = {}, filter = undefined) {
     await this._load();
-    this.store.push({ text, embedding, metadata });
+    // Include userId if provided via filter
+    const finalMeta = { ...metadata };
+    if (filter && filter.userId) finalMeta.userId = filter.userId;
+    this.store.push({ text, embedding, metadata: finalMeta });
     await this._save();
     return true;
   }
 
-  async search(queryEmbedding, topK = 3) {
+  async search(queryEmbedding, topK = 3, filter = undefined) {
     await this._load();
-    const scoredResults = this.store
+    let items = this.store;
+    if (filter && filter.userId) {
+      items = items.filter(item => item.metadata?.userId === filter.userId);
+    }
+    const scoredResults = items
       .map((item) => ({
         text: item.text,
         metadata: item.metadata,
@@ -47,7 +54,6 @@ class LocalFileProvider extends BaseProvider {
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, topK);
-
     return scoredResults;
   }
 
@@ -57,17 +63,25 @@ class LocalFileProvider extends BaseProvider {
     return true;
   }
 
-  async deleteDocument(fileName) {
+  async deleteDocument(fileName, filter = undefined) {
     await this._load();
-    this.store = this.store.filter(item => item.metadata?.fileName !== fileName);
+    let items = this.store;
+    if (filter && filter.userId) {
+      items = items.filter(item => item.metadata?.userId === filter.userId);
+    }
+    this.store = items.filter(item => item.metadata?.fileName !== fileName);
     await this._save();
     return true;
   }
 
-  async listDocuments() {
+  async listDocuments(filter = undefined) {
     await this._load();
+    let items = this.store;
+    if (filter && filter.userId) {
+      items = items.filter(item => item.metadata?.userId === filter.userId);
+    }
     const uniqueFiles = {};
-    for (const item of this.store) {
+    for (const item of items) {
       const fileName = item.metadata?.fileName || 'Unknown File';
       if (!uniqueFiles[fileName]) {
         uniqueFiles[fileName] = {

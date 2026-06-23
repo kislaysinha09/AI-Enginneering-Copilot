@@ -16,9 +16,13 @@ class PineconeProvider extends BaseProvider {
     this.index = this.pc.index(this.indexName);
   }
 
-  async add(text, embedding, metadata = {}) {
+  async add(text, embedding, metadata = {}, filter = undefined) {
     try {
       const id = `${metadata.fileName || 'doc'}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+
+      // Include userId in metadata if present
+      const finalMetadata = { ...metadata };
+      if (filter && filter.userId) finalMetadata.userId = filter.userId;
 
       // Correct syntax for v7: an object with a 'records' array
       await this.index.upsert({
@@ -26,7 +30,7 @@ class PineconeProvider extends BaseProvider {
           id: id,
           values: embedding,
           metadata: {
-            ...metadata,
+            ...finalMetadata,
             text,
           }
         }]
@@ -40,12 +44,13 @@ class PineconeProvider extends BaseProvider {
     }
   }
 
-  async search(queryEmbedding, topK = 3) {
+  async search(queryEmbedding, topK = 3, filter = undefined) {
     try {
       const queryResponse = await this.index.query({
         vector: queryEmbedding,
         topK,
         includeMetadata: true,
+        filter,
       });
 
       return (queryResponse.matches || []).map(match => ({
@@ -69,12 +74,13 @@ class PineconeProvider extends BaseProvider {
     }
   }
 
-  async deleteDocument(fileName) {
+  async deleteDocument(fileName, filter = undefined) {
     try {
+      // Merge provided filter with fileName filter
+      const baseFilter = { fileName: { "$eq": fileName } };
+      const finalFilter = filter ? { ...filter, ...baseFilter } : baseFilter;
       await this.index.deleteMany({
-        filter: {
-          fileName: { "$eq": fileName }
-        }
+        filter: finalFilter,
       });
       return true;
     } catch (error) {
@@ -83,13 +89,14 @@ class PineconeProvider extends BaseProvider {
     }
   }
 
-  async listDocuments() {
+  async listDocuments(filter = undefined) {
     try {
       const dummyVector = new Array(1536).fill(0);
       const queryResponse = await this.index.query({
         vector: dummyVector,
         topK: 1000,
         includeMetadata: true,
+        filter,
       });
 
       const uniqueFiles = {};
